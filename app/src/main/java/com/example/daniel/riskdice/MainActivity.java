@@ -13,7 +13,7 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
     private EditText e1, e2;
     private TextView t1, t2, fight;
-    private Button aButton, nextButton;
+    private Button Lock_In_Button, nextButton;
 
     String attackNum, defendNum;        //Store the amount of attacking and defending units
 
@@ -26,10 +26,10 @@ public class MainActivity extends Activity {
         e1 = (EditText) findViewById(R.id.attackText);
         e2 = (EditText) findViewById(R.id.defendText);
         fight = (TextView) findViewById(R.id.battleView);
-        aButton = (Button) findViewById(R.id.lockInButton);
+        Lock_In_Button = (Button) findViewById(R.id.lockInButton);
         nextButton = (Button) findViewById(R.id.prepareButton);
 
-        aButton.setOnClickListener(new View.OnClickListener() {
+        Lock_In_Button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
                 attackNum = e1.getText().toString();
@@ -39,6 +39,8 @@ public class MainActivity extends Activity {
             }
         });
 
+        //TODO: Prevent using nextButton until user locks in
+        //TODO: Will do this by making button invisible until lockin pressed
         nextButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 Intent changeScreen = new Intent(MainActivity.this, dice_screen.class);
