@@ -19,7 +19,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".dice_screen"></activity>
+        <activity android:name=".dice_screen" />
+        <activity android:name=".postBattleScreen"></activity>
     </application>
 
 </manifest>

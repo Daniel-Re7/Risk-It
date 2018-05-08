@@ -1,6 +1,7 @@
 package com.example.daniel.riskdice;
 
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -26,15 +27,15 @@ public class dice_screen extends AppCompatActivity {
     private Button defend_Roll1;
     private Button defend_Roll2;
     private Button attack_again;
-    private Button withdrawl_button;
+    private Button retreat_button;
 
     private ArrayList<Integer> attackResults = new ArrayList<>();
     private ArrayList<Integer> defendResults = new ArrayList<>();
 
-    int totalAttackDie;
-    int defend_die_num;
-    int attackNum;
-    int defendNum;
+    private int totalAttackDie;
+    private int defend_die_num;
+    private int attackNum;
+    private int defendNum;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +62,7 @@ public class dice_screen extends AppCompatActivity {
         defend_Roll1 = (Button) findViewById(R.id.defendButton_Roll1);
         defend_Roll2 = (Button) findViewById(R.id.defendButton_Roll2);
         attack_again = (Button) findViewById(R.id.attack_again_button);
-        withdrawl_button = (Button) findViewById(R.id.withdrawl_button);
+        retreat_button = (Button) findViewById(R.id.retreat_button);
 
         //Get # of attack unit and defend units
         defendNum = Integer.parseInt(intent.getStringExtra("defendNum"));
@@ -72,7 +73,8 @@ public class dice_screen extends AppCompatActivity {
         defend_units.setText(String.valueOf(defendNum));
 
         //Set number of diced based off of attacking amount in accordance to RISK rules
-        setDice(attackNum);
+        setDice(attackNum, "attacker");
+        setDice(defendNum, "defender");
 
         attackButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -82,8 +84,18 @@ public class dice_screen extends AppCompatActivity {
                 attackRoll();
                 //Update dice images accordingly
                 updateAttackDice();
-                defend_Roll1.setVisibility(View.VISIBLE);
-                defend_Roll2.setVisibility(View.VISIBLE);
+
+                if(defendNum > 1)
+                {
+                    defend_Roll1.setVisibility(View.VISIBLE);
+                    defend_Roll2.setVisibility(View.VISIBLE);
+                }
+
+                else
+                {
+                    defend_Roll1.setVisibility(View.VISIBLE);
+                    defend_Roll2.setVisibility(View.INVISIBLE);
+                }
             }
         });
 
@@ -120,6 +132,7 @@ public class dice_screen extends AppCompatActivity {
                 defendButton.setVisibility(View.INVISIBLE);
                 //Compute the winner of battle
                 decideWinner();
+                checkArmyConditions();
             }
         });
 
@@ -138,34 +151,56 @@ public class dice_screen extends AppCompatActivity {
             }
         });
 
+        retreat_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent changeScreen = new Intent(dice_screen.this, MainActivity.class);
+                startActivity(changeScreen);
+            }
+        });
+
 
     }
 
-    public void setDice(int attackNum)
+    public void setDice(int attackNum, String army)
     {
         //Sets the number of diced based off of attacking amount in accordance to RISK rules
-        if(attackNum > 3)
-        {
-            totalAttackDie = 3;
-            attack1.setVisibility(View.VISIBLE);
-            attack2.setVisibility(View.VISIBLE);
-            attack3.setVisibility(View.VISIBLE);
-        }
 
-        else if(attackNum > 2)
-        {
-            totalAttackDie = 2;
-            attack1.setVisibility(View.VISIBLE);
-            attack2.setVisibility(View.VISIBLE);
-            attack3.setVisibility(View.INVISIBLE);
-        }
+        switch(army) {
+            case "attacker":
+            {
+                if (attackNum > 3) {
+                    totalAttackDie = 3;
+                    attack1.setVisibility(View.VISIBLE);
+                    attack2.setVisibility(View.VISIBLE);
+                    attack3.setVisibility(View.VISIBLE);
+                } else if (attackNum > 2) {
+                    totalAttackDie = 2;
+                    attack1.setVisibility(View.VISIBLE);
+                    attack2.setVisibility(View.VISIBLE);
+                    attack3.setVisibility(View.INVISIBLE);
+                } else {
+                    totalAttackDie = 1;
+                    attack1.setVisibility(View.VISIBLE);
+                    attack2.setVisibility(View.INVISIBLE);
+                    attack3.setVisibility(View.INVISIBLE);
+                }
+            }
 
-        else if(attackNum > 1 )
-        {
-            totalAttackDie = 1;
-            attack1.setVisibility(View.VISIBLE);
-            attack2.setVisibility(View.INVISIBLE);
-            attack3.setVisibility(View.INVISIBLE);
+            case "defender":
+            {
+                if(defendNum > 1)
+                {
+                    defend1.setVisibility(View.VISIBLE);
+                    defend2.setVisibility(View.VISIBLE);
+                }
+
+                else
+                {
+                    defend1.setVisibility(View.VISIBLE);
+                    defend2.setVisibility(View.INVISIBLE);
+                }
+            }
         }
     }
 
@@ -347,17 +382,27 @@ public class dice_screen extends AppCompatActivity {
         //See how many times attacker / defender won
         //This is done by ordering Arrays from Highest -> Lowest and comparing die rolls
         //If defender is >= then they get defenders advantage and win
-        for(int x = 0; x < defend_die_num; x++)
+        if(totalAttackDie == 1)
         {
-            // Defenders advantage, if both are the same defender wins
-            if(defendResults.get(x) >= attackResults.get(x))
-            {
+            if(defendResults.get(0) >= attackResults.get(0))
                 defend_dice_won++;
-            }
 
             else
-            {
                 attack_dice_won++;
+        }
+
+        else
+        {
+            for (int x = 0; x < defend_die_num; x++)
+            {
+                // Defenders advantage, if both are the same defender wins
+                if (defendResults.get(x) >= attackResults.get(x))
+                    defend_dice_won++;
+
+
+                else
+                    attack_dice_won++;
+
             }
         }
 
@@ -391,7 +436,51 @@ public class dice_screen extends AppCompatActivity {
         attack_units.setText(String.valueOf(attackNum));
         defend_units.setText(String.valueOf(defendNum));
         attack_again.setVisibility(View.VISIBLE);
+        retreat_button.setVisibility(View.VISIBLE);
 
+    }
+
+    public void checkArmyConditions()
+    {
+        if(attackNum <= 1 && defendNum > 0)
+        {
+            attack_again.setVisibility(View.INVISIBLE);
+            retreat_button.setVisibility(View.INVISIBLE);
+
+            // Delays the activity change
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    // Go to post battle screen
+                    Intent changeScreen = new Intent(dice_screen.this, postBattleScreen.class);
+                    changeScreen.putExtra("battleSynopsis","The Defender has held off the invading army. \n\n" +
+                            "They live another day!");
+                    finish();
+                    startActivity(changeScreen);
+                }
+            }, 3000);
+
+        }
+
+        else if (attackNum > 1 && defendNum <= 0)
+        {
+            attack_again.setVisibility(View.INVISIBLE);
+            retreat_button.setVisibility(View.INVISIBLE);
+
+            // Delays the activity change
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    // Go to post battle screen
+                    Intent changeScreen = new Intent(dice_screen.this, postBattleScreen.class);
+                    changeScreen.putExtra("battleSynopsis","The Attacker has successfully destroyed the defending army. \n\n" +
+                            "Their territory now belongs to the Attacker!");
+                    finish();
+                    startActivity(changeScreen);
+                }
+            }, 3000);
+
+        }
     }
 
 }
